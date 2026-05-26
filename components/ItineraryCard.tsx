@@ -2,6 +2,7 @@
 
 import { ItineraryActivity } from "@/types";
 import Image from "next/image";
+import { useState } from "react";
 
 interface Props {
   activity: ItineraryActivity;
@@ -26,7 +27,18 @@ const typeColors: Record<string, string> = {
   attraction: "bg-pink-500/20 text-pink-300 border-pink-500/30",
 };
 
+const placeholderBackgrounds: Record<string, string> = {
+  restaurant: "bg-gradient-to-br from-orange-900/40 via-red-900/30 to-orange-800/40",
+  transit: "bg-gradient-to-br from-blue-900/40 via-cyan-900/30 to-blue-800/40",
+  scenic: "bg-gradient-to-br from-green-900/40 via-teal-900/30 to-green-800/40",
+  activity: "bg-gradient-to-br from-purple-900/40 via-pink-900/30 to-purple-800/40",
+  museum: "bg-gradient-to-br from-amber-900/40 via-yellow-900/30 to-amber-800/40",
+  attraction: "bg-gradient-to-br from-pink-900/40 via-rose-900/30 to-pink-800/40",
+};
+
 export default function ItineraryCard({ activity, isModified = false }: Props) {
+  const [imageError, setImageError] = useState(false);
+  
   const tierMessage = activity.isPartner
     ? "Free cancellation until last minute since you are Titanium member"
     : null;
@@ -43,7 +55,7 @@ export default function ItineraryCard({ activity, isModified = false }: Props) {
           <span className="text-green-300 text-xs">Just added to your itinerary</span>
         </div>
       )}
-      <div className="p-4 space-y-3">
+      <div className="p-3 space-y-2.5">
         <div className="flex items-center gap-2 text-white/90 font-semibold text-sm">
           <span className="text-marriott-coral">⏰</span>
           <span>
@@ -52,21 +64,31 @@ export default function ItineraryCard({ activity, isModified = false }: Props) {
           <span className="text-white/50">({activity.timeBlock})</span>
         </div>
 
-        <div className="flex gap-4">
-          <div className="relative w-32 h-32 flex-shrink-0 rounded-xl overflow-hidden">
-            <Image
-              src={activity.activity.images[0]}
-              alt={activity.activity.name}
-              fill
-              className="object-cover"
-              unoptimized
-            />
+        <div className="flex gap-3">
+          <div className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden">
+            {!imageError ? (
+              <Image
+                src={activity.activity.images[0]}
+                alt={activity.activity.name}
+                fill
+                className="object-cover"
+                unoptimized
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              <div className={`w-full h-full ${placeholderBackgrounds[activity.type] || placeholderBackgrounds.activity} backdrop-blur-sm border border-white/10 flex flex-col items-center justify-center`}>
+                <span className="text-5xl opacity-40">{typeIcons[activity.type] || "📍"}</span>
+                <span className="text-[10px] text-white/40 mt-1 font-medium uppercase tracking-wider">
+                  {activity.type}
+                </span>
+              </div>
+            )}
           </div>
 
-          <div className="flex-1 space-y-2">
+          <div className="flex-1 space-y-1.5">
             <div className="flex items-start gap-2">
               <span
-                className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium border ${
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border ${
                   typeColors[activity.type] || typeColors.activity
                 }`}
               >
@@ -75,11 +97,11 @@ export default function ItineraryCard({ activity, isModified = false }: Props) {
               </span>
             </div>
 
-            <h4 className="text-white font-semibold text-lg leading-tight">
+            <h4 className="text-white font-semibold text-base leading-tight">
               {activityName}
             </h4>
 
-            <div className="flex items-center gap-3 text-sm">
+            <div className="flex items-center gap-2 text-xs">
               <div className="flex items-center gap-1 text-yellow-400">
                 <span>⭐</span>
                 <span className="font-semibold">
@@ -87,11 +109,11 @@ export default function ItineraryCard({ activity, isModified = false }: Props) {
                 </span>
               </div>
               <span className="text-white/60">
-                ({activity.activity.reviews.toLocaleString()} reviews)
+                ({activity.activity.reviews.toLocaleString()})
               </span>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 text-sm">
+            <div className="flex flex-wrap items-center gap-2 text-xs">
               <div className="text-white font-semibold">
                 ${activity.activity.price}
               </div>
@@ -115,27 +137,26 @@ export default function ItineraryCard({ activity, isModified = false }: Props) {
           <span>{activity.activity.availability}</span>
         </div>
 
-        <p className="text-white/80 text-sm leading-relaxed line-clamp-2">
+        <p className="text-white/80 text-xs leading-relaxed line-clamp-2">
           {activity.activity.description}
         </p>
 
         {activity.isPartner && (
           <div className="space-y-2 pt-2 border-t border-white/10">
             {activity.activity.earnPoints > 0 && (
-              <div className="flex items-center gap-2 text-sm">
+              <div className="flex items-center gap-2 text-xs">
                 <span className="text-green-400">✓</span>
                 <span className="text-white/90">
                   Earn{" "}
                   <span className="font-semibold text-marriott-coral">
                     {activity.activity.earnPoints} Bonvoy Points
-                  </span>{" "}
-                  on this booking
+                  </span>
                 </span>
               </div>
             )}
 
             {tierMessage && (
-              <div className="flex items-start gap-2 text-sm bg-amber-500/10 border border-amber-500/30 rounded-lg p-2">
+              <div className="flex items-start gap-1.5 text-xs bg-amber-500/10 border border-amber-500/30 rounded-lg p-2">
                 <span className="text-amber-400 text-xs">👑</span>
                 <span className="text-amber-200 text-xs leading-relaxed">
                   {tierMessage}
@@ -143,7 +164,7 @@ export default function ItineraryCard({ activity, isModified = false }: Props) {
               </div>
             )}
 
-            <button className="w-full bg-gradient-to-r from-marriott-red to-marriott-lightRed hover:from-marriott-darkRed hover:to-marriott-red text-white font-semibold py-3 px-4 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg">
+            <button className="w-full bg-gradient-to-r from-marriott-red to-marriott-lightRed hover:from-marriott-darkRed hover:to-marriott-red text-white font-semibold py-2 px-3 rounded-lg text-sm transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg">
               Book Now
             </button>
           </div>
