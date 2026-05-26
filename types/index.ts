@@ -75,3 +75,27 @@ export interface TripPlanContext {
   currentPlan?: TripPlan;
   modifications: string[];
 }
+
+/**
+ * User Profile Interface
+ * 
+ * Represents a traveler's preferences and constraints for personalized trip planning.
+ * Used to customize AI-generated itineraries based on dietary restrictions, accessibility
+ * needs, budget constraints, travel style, and fitness level.
+ * 
+ * Example profiles: Maverick (high-protein, luxury), Sarah (vegan, budget)
+ */
+export interface UserProfile {
+  id: string;
+  name: string;
+  bonvoyMemberNumber: string;
+  dietaryRestrictions: string[];  // e.g., ["vegan", "gluten-free"]
+  accessibilityNeeds: string[];   // e.g., ["wheelchair", "hearing aid"]
+  budgetLevel: "budget" | "moderate" | "luxury";
+  travelStyle: "adventure" | "relaxation" | "cultural" | "foodie" | "mixed";
+  preferences: {
+    avoidCrowds: boolean;
+    preferLocalExperiences: boolean;
+    fitnessLevel: "low" | "moderate" | "high";
+  };
+}

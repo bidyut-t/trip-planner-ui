@@ -7,6 +7,7 @@ import { generateTripPlan } from "@/utils/tripPlanner";
 import { modifyTripPlan } from "@/utils/modificationEngine";
 import { apiService } from "@/services/api";
 import { config } from "@/config/env";
+import UserProfileSelector from "./UserProfileSelector";
 
 interface ChatInterfaceProps {
   onChatStart?: () => void;
@@ -26,6 +27,7 @@ export default function ChatInterface({ onChatStart }: ChatInterfaceProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isChatReady, setIsChatReady] = useState(false);
   const [hasResponse, setHasResponse] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | undefined>();
   const [tripContext, setTripContext] = useState<TripPlanContext>({
     originalPrompt: "",
     modifications: [],
@@ -91,7 +93,7 @@ export default function ChatInterface({ onChatStart }: ChatInterfaceProps) {
         setTimeout(() => {
           // Handle modification (client-side)
           const { plan: updatedPlan, modifiedActivities } = modifyTripPlan(
-            tripContext.currentPlan!,  // Non-null assertion since we checked above
+            tripContext.currentPlan!,
             userInput
           );
 
@@ -130,8 +132,8 @@ export default function ChatInterface({ onChatStart }: ChatInterfaceProps) {
         let tripPlan;
         
         if (config.useApiData) {
-          // Use API
-          tripPlan = await apiService.generateItinerary(userInput);
+          // Use API with selected user profile
+          tripPlan = await apiService.generateItinerary(userInput, selectedUserId);
         } else {
           // Use mock data
           tripPlan = generateTripPlan(userInput);
@@ -227,6 +229,10 @@ export default function ChatInterface({ onChatStart }: ChatInterfaceProps) {
               We are here to help planning your trip
             </p>
           </div>
+          <UserProfileSelector 
+            selectedUserId={selectedUserId}
+            onProfileChange={setSelectedUserId}
+          />
           <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
         </div>
 
