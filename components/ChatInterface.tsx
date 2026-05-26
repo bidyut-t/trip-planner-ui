@@ -91,7 +91,7 @@ export default function ChatInterface({ onChatStart }: ChatInterfaceProps) {
         setTimeout(() => {
           // Handle modification (client-side)
           const { plan: updatedPlan, modifiedActivities } = modifyTripPlan(
-            tripContext.currentPlan,
+            tripContext.currentPlan!,  // Non-null assertion since we checked above
             userInput
           );
 

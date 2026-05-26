@@ -111,6 +111,8 @@ export function parseModificationRequest(request: string): {
   target?: string;
   constraint?: string;
   details?: any;
+  day?: number;  // Add day property for day-specific modifications
+  timeOfDay?: string;  // Add timeOfDay property for time-specific modifications
 } {
   const lowerRequest = request.toLowerCase();
   const result: any = {};

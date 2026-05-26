@@ -116,6 +116,8 @@ export class ApiService {
             reviewSnippet: act.activity.reviewSnippet,
             distance: act.activity.distance,
             walkingTime: act.activity.walkingTime,
+            latitude: act.activity.latitude,   // Include coordinates for map
+            longitude: act.activity.longitude, // Include coordinates for map
           },
         })),
       })),

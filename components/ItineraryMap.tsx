@@ -119,7 +119,14 @@ export default function ItineraryMap({ activities, excludedActivities = [] }: Pr
       activitiesInCurrentDay = 0;
     }
     
-    const coords = getActivityCoordinates(activity.activity.id);
+    // Try to get coordinates from API response first, fallback to hardcoded
+    let coords: [number, number];
+    if (activity.activity.latitude && activity.activity.longitude) {
+      coords = [activity.activity.latitude, activity.activity.longitude];
+    } else {
+      coords = getActivityCoordinates(activity.activity.id);
+    }
+    
     const location: ActivityLocation = {
       id: activity.activity.id,
       name: activity.activity.name,

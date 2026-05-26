@@ -28,6 +28,8 @@ export interface Activity {
   reviewSnippet: string;
   distance: string;
   walkingTime: string;
+  latitude?: number;  // Coordinates for map
+  longitude?: number; // Coordinates for map
 }
 
 export interface ItineraryActivity {
