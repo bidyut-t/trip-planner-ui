@@ -74,6 +74,11 @@ export interface TripPlanContext {
   originalPrompt: string;
   currentPlan?: TripPlan;
   modifications: string[];
+  planHistory?: {           // Track full conversation history
+    prompt: string;
+    plan: TripPlan;
+    timestamp: Date;
+  }[];
 }
 
 /**

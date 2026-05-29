@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import { Message, TripPlanContext } from "@/types";
 import MessageBubble from "./MessageBubble";
 import { generateTripPlan } from "@/utils/tripPlanner";
-import { modifyTripPlan } from "@/utils/modificationEngine";
 import { apiService } from "@/services/api";
 import { config } from "@/config/env";
 import UserProfileSelector from "./UserProfileSelector";
@@ -27,10 +26,14 @@ export default function ChatInterface({ onChatStart }: ChatInterfaceProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isChatReady, setIsChatReady] = useState(false);
   const [hasResponse, setHasResponse] = useState(false);
+  
+  // USER PROFILE FEATURE: Store selected user ID for personalized trip planning
   const [selectedUserId, setSelectedUserId] = useState<string | undefined>();
+  
   const [tripContext, setTripContext] = useState<TripPlanContext>({
     originalPrompt: "",
     modifications: [],
+    currentPlan: undefined,  // Explicitly initialize to track state properly
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -78,98 +81,77 @@ export default function ChatInterface({ onChatStart }: ChatInterfaceProps) {
     setIsLoading(true);
 
     try {
-      // Check if this is a modification request
-      const isModification = tripContext.currentPlan && (
-        userInput.toLowerCase().includes('add') ||
-        userInput.toLowerCase().includes('remove') ||
-        userInput.toLowerCase().includes('replace') ||
-        userInput.toLowerCase().includes('change') ||
-        userInput.toLowerCase().includes('more') ||
-        userInput.toLowerCase().includes('don\'t want')
-      );
-
-      if (isModification && tripContext.currentPlan) {
-        // Add 1.5 second delay before showing response
-        setTimeout(() => {
-          // Handle modification (client-side)
-          const { plan: updatedPlan, modifiedActivities } = modifyTripPlan(
-            tripContext.currentPlan!,
-            userInput
-          );
-
-          const assistantMessage: Message = {
-            id: (Date.now() + 1).toString(),
-            role: "assistant",
-            content: `I've updated your itinerary based on your request. Here's your modified plan:`,
-            tripPlan: updatedPlan,
-            timestamp: new Date(),
-            isModification: true,
-            modifiedActivities,
-          };
-
-          setMessages((prev) => [...prev, assistantMessage]);
-          setTripContext({
-            ...tripContext,
-            currentPlan: updatedPlan,
-            modifications: [...tripContext.modifications, userInput],
-          });
-          setIsLoading(false);
-          setHasResponse(true);
-
-          // Add follow-up message after a short delay
-          setTimeout(() => {
-            const followUpMessage: Message = {
-              id: (Date.now() + 2).toString(),
-              role: "assistant",
-              content: "Would you like to make any changes to this itinerary? I can help adjust activities, timings, or suggest alternatives! 😊",
-              timestamp: new Date(),
-            };
-            setMessages((prev) => [...prev, followUpMessage]);
-          }, 800);
-        }, 1500);
-      } else {
-        // Generate new trip plan - use mock or API based on config
-        let tripPlan;
+      // AI-POWERED CONVERSATIONAL MEMORY: Let the AI decide everything!
+      // No brittle keyword detection - AI understands intent naturally
+      
+      console.log('[ChatInterface] Sending to AI:', {
+        userInput,
+        hasExistingPlan: !!tripContext.currentPlan,
+        currentDestination: tripContext.currentPlan?.destination,
+      });
+      
+      // ALWAYS pass current plan if it exists - let AI decide what to do with it
+      // AI will determine: "Is this modifying existing plan or requesting a new trip?"
+      let tripPlan;
+      
+      if (config.useApiData) {
+        tripPlan = await apiService.generateItinerary(
+          userInput, 
+          selectedUserId,
+          tripContext.currentPlan  // Always pass current plan if exists
+        );
         
-        if (config.useApiData) {
-          // Use API with selected user profile
-          tripPlan = await apiService.generateItinerary(userInput, selectedUserId);
-        } else {
-          // Use mock data
-          tripPlan = generateTripPlan(userInput);
-        }
+        // DEBUG: Log what we received
+        console.log('[ChatInterface] Received plan from backend:', {
+          destination: tripPlan.destination,
+          dayCount: tripPlan.days.length,
+          activityCount: tripPlan.days[0]?.activities?.length || 0,
+          activities: tripPlan.days[0]?.activities?.map(a => a.activity.name) || []
+        });
+      } else {
+        tripPlan = generateTripPlan(userInput);
+      }
 
-        // Add 1.5 second delay before showing response
+      // Add 1.5 second delay before showing response
+      setTimeout(() => {
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: tripContext.currentPlan 
+            ? `I've updated your itinerary. Here's your refined ${tripPlan.days.length}-day plan:`
+            : `I've created a personalized ${tripPlan.days.length}-day itinerary for your trip to ${tripPlan.destination}. Here's your complete plan:`,
+          tripPlan,
+          timestamp: new Date(),
+          isModification: !!tripContext.currentPlan,
+        };
+
+        setMessages((prev) => [...prev, assistantMessage]);
+        
+        // CONVERSATIONAL MEMORY FEATURE: Store plan history for undo/debugging
+        setTripContext(prev => ({
+          originalPrompt: prev.originalPrompt || userInput,
+          currentPlan: tripPlan,
+          modifications: prev.currentPlan ? [...prev.modifications, userInput] : [],
+          planHistory: [
+            ...(prev.planHistory || []),
+            { prompt: userInput, plan: tripPlan, timestamp: new Date() }
+          ]
+        }));
+        
+        setIsLoading(false);
+        setHasResponse(true);
+
+        // Add follow-up message after a short delay
         setTimeout(() => {
-          const assistantMessage: Message = {
-            id: (Date.now() + 1).toString(),
+          const followUpMessage: Message = {
+            id: (Date.now() + 2).toString(),
             role: "assistant",
-            content: `I've created a personalized ${tripPlan.days.length}-day itinerary for your trip to ${tripPlan.destination}. Here's your complete plan:`,
-            tripPlan,
+            content: "Would you like to make any changes to this itinerary? I can help adjust activities, timings, or suggest alternatives! 😊",
             timestamp: new Date(),
           };
-
-          setMessages((prev) => [...prev, assistantMessage]);
-          setTripContext({
-            originalPrompt: userInput,
-            currentPlan: tripPlan,
-            modifications: [],
-          });
-          setIsLoading(false);
-          setHasResponse(true);
-
-          // Add follow-up message after a short delay
-          setTimeout(() => {
-            const followUpMessage: Message = {
-              id: (Date.now() + 2).toString(),
-              role: "assistant",
-              content: "Would you like to make any changes to this itinerary? I can help adjust activities, timings, or suggest alternatives! 😊",
-              timestamp: new Date(),
-            };
-            setMessages((prev) => [...prev, followUpMessage]);
-          }, 800);
-        }, 1500);
-      }
+          setMessages((prev) => [...prev, followUpMessage]);
+        }, 800);
+      }, 1500);
     } catch (error) {
       console.error('Error processing request:', error);
       setIsLoading(false);
@@ -229,10 +211,13 @@ export default function ChatInterface({ onChatStart }: ChatInterfaceProps) {
               We are here to help planning your trip
             </p>
           </div>
+          
+          {/* USER PROFILE FEATURE: Selector component for choosing travel profiles */}
           <UserProfileSelector 
             selectedUserId={selectedUserId}
             onProfileChange={setSelectedUserId}
           />
+          
           <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
         </div>
 

@@ -61,7 +61,6 @@ export default function ItineraryCard({ activity, isModified = false }: Props) {
           <span>
             {activity.startTime} - {activity.endTime}
           </span>
-          <span className="text-white/50">({activity.timeBlock})</span>
         </div>
 
         <div className="flex gap-3">

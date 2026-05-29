@@ -48,9 +48,25 @@ export class ApiService {
 
   /**
    * Generate a new trip itinerary from a natural language prompt
+   * 
+   * USER PROFILE FEATURE: Accepts optional userId parameter for personalized planning
+   * When userId is provided, backend uses that profile's preferences (dietary, fitness, travel style)
+   * 
+   * CONVERSATIONAL MEMORY FEATURE: Accepts optional previousPlan for modifications
+   * When previousPlan is provided, backend uses AI to refine the existing plan
+   * 
+   * @param prompt - Natural language trip request or modification
+   * @param userId - Optional user ID for personalization (e.g., "user-005" for Taylor)
+   * @param previousPlan - Optional current plan for conversational refinement
+   * @returns Personalized trip plan matching user preferences
    */
-  async generateItinerary(prompt: string, userId?: string): Promise<TripPlan> {
-    const body = userId ? { prompt, userId } : { prompt };
+  async generateItinerary(prompt: string, userId?: string, previousPlan?: TripPlan): Promise<TripPlan> {
+    // CONVERSATIONAL MEMORY FEATURE: Include previousPlan in request body for modifications
+    const body = { 
+      prompt, 
+      ...(userId && { userId }),
+      ...(previousPlan && { previousPlan })
+    };
     
     const response = await fetch(`${this.baseUrl}/api/trips/plan/natural`, {
       method: 'POST',
@@ -84,6 +100,9 @@ export class ApiService {
 
   /**
    * Transform backend API response to our TripPlan interface
+   * 
+   * MAP LINK FEATURE: Handles mapLink field from backend, maps to mapUrl for frontend
+   * Provides robust fallbacks for missing or incomplete data
    */
   private transformApiResponse(data: any): TripPlan {
     // Handle new backend schema format (from both generation and refinement)
@@ -100,6 +119,7 @@ export class ApiService {
         return {
           day: day.day,
           date: day.date,
+          // MAP LINK FEATURE: Backend returns 'mapLink', frontend expects 'mapUrl'
           mapUrl: day.mapLink || day.mapUrl,
           activities: dayActivities.map((act: any) => ({
             timeBlock: act.timeBlock || `${act.start || ''} - ${act.end || ''}`,
@@ -113,26 +133,28 @@ export class ApiService {
               provider: act.activity?.provider || act.provider || '',
               category: act.activity?.category || act.type,
               cuisineType: act.activity?.cuisineType,
-              rating: act.activity?.rating || 0,
-              reviews: act.activity?.reviews || 0,
-              price: act.activity?.price || 0,
-              currency: act.activity?.currency || 'USD',
-              priceLevel: act.activity?.priceLevel || 1,
-              duration: act.activity?.duration || '1 hour',
+              // FIX: Backend refinement returns flat structure (blocks), not nested (activities)
+              // Check both act.rating and act.activity.rating
+              rating: act.activity?.rating || act.rating || 0,
+              reviews: act.activity?.reviews || act.reviews || 0,
+              price: act.activity?.price || act.price || 0,
+              currency: act.activity?.currency || act.currency || 'USD',
+              priceLevel: act.activity?.priceLevel || act.priceLevel || 1,
+              duration: act.activity?.duration || act.duration || '1 hour',
               description: act.activity?.description || act.notes || '',
-              highlights: act.activity?.highlights || [],
+              highlights: act.activity?.highlights || act.highlights || [],
               included: act.activity?.included || [],
               notIncluded: act.activity?.notIncluded || [],
               meetingPoint: act.activity?.meetingPoint || '',
               contact: act.activity?.contact || '',
-              bookingUrl: act.activity?.bookingUrl || '',
-              images: act.activity?.images || [],
+              bookingUrl: act.activity?.bookingUrl || act.bookingUrl || '',
+              images: act.activity?.images || act.images || [],
               verified: act.activity?.verified || false,
               popular: act.activity?.popular || false,
               openNow: act.activity?.openNow || true,
-              availability: act.activity?.availability || '',
-              cancellationPolicy: act.activity?.cancellationPolicy || '',
-              earnPoints: act.activity?.earnPoints || 0,
+              availability: act.activity?.availability || act.availability || '',
+              cancellationPolicy: act.activity?.cancellationPolicy || act.cancellationPolicy || '',
+              earnPoints: act.activity?.earnPoints || act.earnPoints || 0,
               amenities: act.activity?.amenities || [],
               reviewSnippet: act.activity?.reviewSnippet || '',
               distance: act.activity?.distance || '',
@@ -163,6 +185,11 @@ export class ApiService {
 
   /**
    * Get all user profiles for personalization
+   * 
+   * USER PROFILE FEATURE: Fetches available user profiles from backend
+   * Used to populate the profile selector dropdown in the UI
+   * 
+   * @returns Array of user profiles with preferences (dietary, fitness, travel style, etc.)
    */
   async getUserProfiles(): Promise<UserProfile[]> {
     const response = await fetch(`${this.baseUrl}/api/trips/profiles`, {
