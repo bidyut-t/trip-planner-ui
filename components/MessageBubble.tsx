@@ -16,9 +16,11 @@ const ItineraryMap = dynamic(() => import('./ItineraryMap'), {
 
 interface Props {
   message: Message;
+  selectedActivities?: Set<string>;
+  onSelectActivity?: (activityId: string, isSelected: boolean) => void;
 }
 
-export default function MessageBubble({ message }: Props) {
+export default function MessageBubble({ message, selectedActivities, onSelectActivity }: Props) {
   if (message.role === "user") {
     return (
       <div className="flex justify-end animate-fade-in">
@@ -83,6 +85,8 @@ export default function MessageBubble({ message }: Props) {
                   <ItineraryCard
                     activity={activity}
                     isModified={message.isModification && message.modifiedActivities?.includes(activity.activity.id)}
+                    isSelected={selectedActivities?.has(activity.activity.id)}
+                    onSelect={onSelectActivity}
                   />
                 </div>
               ))}

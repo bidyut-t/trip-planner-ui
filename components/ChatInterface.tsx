@@ -7,41 +7,105 @@ import { generateTripPlan } from "@/utils/tripPlanner";
 import { apiService } from "@/services/api";
 import { config } from "@/config/env";
 import UserProfileSelector from "./UserProfileSelector";
+import Image from "next/image";
 
 interface ChatInterfaceProps {
   onChatStart?: () => void;
 }
 
 export default function ChatInterface({ onChatStart }: ChatInterfaceProps) {
+  const [selectedUserId, setSelectedUserId] = useState<string | undefined>();
+  const [selectedUserName, setSelectedUserName] = useState<string>("there");
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
       role: "assistant",
       content:
-        "Hello! I'm your AI Travel companion ready to unlock new adventures around the world. How can I help you plan your perfect trip?",
+        `Hello there! I'm your AI Travel companion ready to unlock new adventures around the world. How can I help you plan your perfect trip?`,
       timestamp: new Date(),
     },
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState("");
   const [isChatReady, setIsChatReady] = useState(false);
   const [hasResponse, setHasResponse] = useState(false);
-  
-  // USER PROFILE FEATURE: Store selected user ID for personalized trip planning
-  const [selectedUserId, setSelectedUserId] = useState<string | undefined>();
-  
+  const [selectedActivities, setSelectedActivities] = useState<Set<string>>(new Set());
   const [tripContext, setTripContext] = useState<TripPlanContext>({
     originalPrompt: "",
     modifications: [],
     currentPlan: undefined,  // Explicitly initialize to track state properly
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // Set chat as ready after component mounts
     const timer = setTimeout(() => setIsChatReady(true), 100);
     return () => clearTimeout(timer);
   }, []);
+
+  // Auto-focus input on mount
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
+  // Cycle through loading messages
+  useEffect(() => {
+    if (isLoading) {
+      const messages = [
+        "Gathering information...",
+        "Searching for amazing places...",
+        "Finding the best activities...",
+        "Checking partner availability...",
+        "Generating your itinerary...",
+        "Finalizing your trip plan..."
+      ];
+      let index = 0;
+      setLoadingMessage(messages[0]);
+      
+      const interval = setInterval(() => {
+        if (index < messages.length - 1) {
+          index++;
+          setLoadingMessage(messages[index]);
+        }
+      }, 2500); // Change message every 2.5 seconds (for 15s total = 6 messages * 2.5s)
+      
+      return () => clearInterval(interval);
+    }
+  }, [isLoading]);
+
+  // Update welcome message when user profile changes
+  useEffect(() => {
+    if (messages.length > 0 && messages[0].id === "1") {
+      const updatedMessages = [...messages];
+      updatedMessages[0] = {
+        ...updatedMessages[0],
+        content: `Hello${selectedUserName !== "Generic" ? ` ${selectedUserName}` : ""}! I'm your AI Travel companion ready to unlock new adventures around the world. How can I help you plan your perfect trip?`,
+      };
+      setMessages(updatedMessages);
+    }
+  }, [selectedUserName]);
+
+  const handleProfileChange = async (userId: string | undefined) => {
+    setSelectedUserId(userId);
+    if (userId) {
+      try {
+        const profiles = await apiService.getUserProfiles();
+        const profile = profiles.find(p => p.id === userId);
+        if (profile) {
+          setSelectedUserName(profile.name);
+        }
+      } catch (error) {
+        console.error('Failed to load profile:', error);
+        setSelectedUserName("Generic");
+      }
+    } else {
+      setSelectedUserName("Generic");
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -94,6 +158,10 @@ export default function ChatInterface({ onChatStart }: ChatInterfaceProps) {
       // AI will determine: "Is this modifying existing plan or requesting a new trip?"
       let tripPlan;
       
+      // Add minimum delay for mock data to simulate realistic response time
+      const startTime = Date.now();
+      const minDelay = 15000; // 15 seconds average response time
+      
       if (config.useApiData) {
         tripPlan = await apiService.generateItinerary(
           userInput, 
@@ -112,7 +180,10 @@ export default function ChatInterface({ onChatStart }: ChatInterfaceProps) {
         tripPlan = generateTripPlan(userInput);
       }
 
-      // Add 1.5 second delay before showing response
+      // Calculate remaining delay to reach minimum response time
+      const elapsed = Date.now() - startTime;
+      const remainingDelay = Math.max(0, minDelay - elapsed);
+      
       setTimeout(() => {
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
@@ -151,7 +222,7 @@ export default function ChatInterface({ onChatStart }: ChatInterfaceProps) {
           };
           setMessages((prev) => [...prev, followUpMessage]);
         }, 800);
-      }, 1500);
+      }, remainingDelay);
     } catch (error) {
       console.error('Error processing request:', error);
       setIsLoading(false);
@@ -166,6 +237,18 @@ export default function ChatInterface({ onChatStart }: ChatInterfaceProps) {
       };
       setMessages((prev) => [...prev, errorMessage]);
     }
+  };
+
+  const handleSelectActivity = (activityId: string, isSelected: boolean) => {
+    setSelectedActivities(prev => {
+      const newSet = new Set(prev);
+      if (isSelected) {
+        newSet.add(activityId);
+      } else {
+        newSet.delete(activityId);
+      }
+      return newSet;
+    });
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -200,8 +283,14 @@ export default function ChatInterface({ onChatStart }: ChatInterfaceProps) {
 
       <div className="fixed bottom-10 left-1/2 -translate-x-1/2 w-[90%] max-w-4xl glass rounded-3xl shadow-2xl overflow-hidden animate-slide-up hover:shadow-[0_20px_60px_rgba(220,20,60,0.3)] transition-all duration-500">
         <div className="p-6 border-b border-white/10 flex items-center gap-4 bg-gradient-to-r from-transparent via-white/5 to-transparent">
-          <div className="w-12 h-12 bg-gradient-to-br from-marriott-red via-marriott-lightRed to-marriott-coral rounded-full flex items-center justify-center text-2xl shadow-lg animate-pulse-slow">
-            🤖
+          <div className="w-12 h-12 bg-gradient-to-br from-marriott-red via-marriott-lightRed to-marriott-coral rounded-full flex items-center justify-center shadow-lg animate-pulse-slow p-2.5">
+            <Image
+              src="/marriott-logo-white.png"
+              alt="Marriott Logo"
+              width={28}
+              height={28}
+              className="object-contain"
+            />
           </div>
           <div className="flex-1">
             <h3 className="text-white font-semibold text-lg">
@@ -215,8 +304,25 @@ export default function ChatInterface({ onChatStart }: ChatInterfaceProps) {
           {/* USER PROFILE FEATURE: Selector component for choosing travel profiles */}
           <UserProfileSelector 
             selectedUserId={selectedUserId}
-            onProfileChange={setSelectedUserId}
+            onProfileChange={handleProfileChange}
           />
+          
+          {/* Shopping Bag Indicator */}
+          {selectedActivities.size > 0 && (
+            <div className="relative group cursor-pointer">
+              <div className="w-10 h-10 glass rounded-full flex items-center justify-center shadow-lg border border-marriott-coral/30">
+                <svg className="w-5 h-5 text-marriott-coral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+              </div>
+              <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-marriott-red to-marriott-lightRed rounded-full flex items-center justify-center border border-white/20 shadow-lg animate-pulse-slow">
+                <span className="text-white text-xs font-bold">{selectedActivities.size}</span>
+              </div>
+              <div className="absolute top-12 right-0 glass-dark text-white text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-white/10 z-50">
+                {selectedActivities.size} {selectedActivities.size === 1 ? 'activity' : 'activities'} for booking
+              </div>
+            </div>
+          )}
           
           <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
         </div>
@@ -225,15 +331,23 @@ export default function ChatInterface({ onChatStart }: ChatInterfaceProps) {
           className={`overflow-y-auto p-6 space-y-4 transition-all duration-500 ${messages.length > 1 ? 'h-[55vh] md:h-[60vh]' : 'h-52 md:h-64'}`}
         >
           {messages.map((message) => (
-            <MessageBubble key={message.id} message={message} />
+            <MessageBubble 
+              key={message.id} 
+              message={message}
+              selectedActivities={selectedActivities}
+              onSelectActivity={handleSelectActivity}
+            />
           ))}
           {isLoading && (
-            <div className="flex gap-2 items-center">
-              <div className="glass-dark rounded-2xl px-4 py-3 text-white">
-                <div className="flex gap-1.5 items-end h-6">
-                  <div className="w-2.5 h-2.5 bg-white rounded-full animate-bouncy-dot" />
-                  <div className="w-2.5 h-2.5 bg-white rounded-full animate-bouncy-dot delay-100" />
-                  <div className="w-2.5 h-2.5 bg-white rounded-full animate-bouncy-dot delay-200" />
+            <div className="flex gap-2 items-start">
+              <div className="glass-dark rounded-2xl px-4 py-3 text-white min-w-[200px]">
+                <div className="flex items-center gap-3">
+                  <div className="flex gap-1.5 items-end">
+                    <div className="w-2.5 h-2.5 bg-white rounded-full animate-bouncy-dot" />
+                    <div className="w-2.5 h-2.5 bg-white rounded-full animate-bouncy-dot delay-100" />
+                    <div className="w-2.5 h-2.5 bg-white rounded-full animate-bouncy-dot delay-200" />
+                  </div>
+                  <span className="text-sm text-white/80 animate-pulse">{loadingMessage}</span>
                 </div>
               </div>
             </div>
@@ -244,11 +358,12 @@ export default function ChatInterface({ onChatStart }: ChatInterfaceProps) {
         <div className="p-6 border-t border-white/10 bg-gradient-to-b from-transparent to-white/5">
           <div className="glass rounded-2xl p-3 flex items-center gap-3 focus-within:ring-2 focus-within:ring-marriott-red/50 focus-within:scale-[1.01] transition-all duration-300 hover:bg-white/15">
             <input
+              ref={inputRef}
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Try asking: Plan a 3-day trip to New York with museums and local cuisine"
+              placeholder="Try asking: Plan a 3-day trip to Jaipur with heritage sites and Rajasthani cuisine"
               className="flex-1 bg-transparent border-none outline-none text-white placeholder-white/50 px-2"
               disabled={isLoading}
             />

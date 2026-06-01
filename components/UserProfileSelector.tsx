@@ -58,11 +58,13 @@ export default function UserProfileSelector({ selectedUserId, onProfileChange }:
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="glass px-4 py-2 rounded-lg flex items-center gap-2 text-white text-sm hover:bg-white/10 transition-colors"
+        className="glass px-4 py-2 rounded-lg flex items-center gap-2 text-white text-sm hover:bg-white/10 transition-colors border border-white/10"
         disabled={isLoading}
       >
-        <span className="text-white/70">Travel as:</span>
-        <span className="font-semibold">
+        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+        </svg>
+        <span className="font-semibold text-white/90">
           {selectedProfile ? selectedProfile.name : 'Generic'}
         </span>
         <span className="text-white/50">▼</span>
@@ -74,7 +76,7 @@ export default function UserProfileSelector({ selectedUserId, onProfileChange }:
             className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 mt-2 w-72 glass-dark rounded-xl shadow-2xl z-50 overflow-hidden border border-white/10">
+          <div className="absolute right-0 mt-2 w-72 rounded-xl shadow-2xl z-50 overflow-hidden border border-white/20 bg-slate-900/70 backdrop-blur-lg">
             <div className="p-2 space-y-1">
               {profiles.map((profile) => (
                 <button
