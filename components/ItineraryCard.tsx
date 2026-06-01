@@ -7,6 +7,8 @@ import { useState } from "react";
 interface Props {
   activity: ItineraryActivity;
   isModified?: boolean;
+  onSelect?: (activityId: string, isSelected: boolean) => void;
+  isSelected?: boolean;
 }
 
 const typeIcons: Record<string, string> = {
@@ -36,8 +38,25 @@ const placeholderBackgrounds: Record<string, string> = {
   attraction: "bg-gradient-to-br from-pink-900/40 via-rose-900/30 to-pink-800/40",
 };
 
-export default function ItineraryCard({ activity, isModified = false }: Props) {
+export default function ItineraryCard({ activity, isModified = false, onSelect, isSelected = false }: Props) {
   const [imageError, setImageError] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [showFlyingBag, setShowFlyingBag] = useState(false);
+
+  const handleSelect = () => {
+    if (onSelect) {
+      if (!isSelected) {
+        setShowFlyingBag(true);
+        setIsAnimating(true);
+        setTimeout(() => {
+          setShowFlyingBag(false);
+          setIsAnimating(false);
+        }, 1800);
+      }
+      onSelect(activity.activity.id, !isSelected);
+    }
+  };
   
   const tierMessage = activity.isPartner
     ? "Free cancellation until last minute since you are Titanium member"
@@ -48,7 +67,12 @@ export default function ItineraryCard({ activity, isModified = false }: Props) {
   const activityProvider = activity.activity.provider; // Direct from mock data
 
   return (
-    <div className={`glass-dark rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all ${isModified ? 'ring-2 ring-green-400 animate-pulse-highlight' : ''}`}>
+    <div className={`glass-dark rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all ${isModified ? 'ring-2 ring-green-400 animate-pulse-highlight' : ''} relative`}>
+      {showFlyingBag && (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-4xl z-50 pointer-events-none animate-fly-to-cart">
+          🛍️
+        </div>
+      )}
       {isModified && (
         <div className="bg-green-500/20 border-b border-green-500/30 px-4 py-2 flex items-center gap-2">
           <span className="text-green-400 text-sm font-semibold">✨ NEW</span>
@@ -61,7 +85,6 @@ export default function ItineraryCard({ activity, isModified = false }: Props) {
           <span>
             {activity.startTime} - {activity.endTime}
           </span>
-          <span className="text-white/50">({activity.timeBlock})</span>
         </div>
 
         <div className="flex gap-3">
@@ -164,20 +187,95 @@ export default function ItineraryCard({ activity, isModified = false }: Props) {
               </div>
             )}
 
-            <button className="w-full bg-gradient-to-r from-marriott-red to-marriott-lightRed hover:from-marriott-darkRed hover:to-marriott-red text-white font-semibold py-2 px-3 rounded-lg text-sm transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg">
-              Book Now
+            <button 
+              onClick={handleSelect}
+              className={`w-full text-white font-semibold py-2 px-3 rounded-lg text-sm transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg ${
+                isSelected 
+                  ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800' 
+                  : 'bg-gradient-to-r from-marriott-red to-marriott-lightRed hover:from-marriott-darkRed hover:to-marriott-red'
+              }`}
+            >
+              {isSelected ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span>Added for Booking</span>
+                  <span>🛍️</span>
+                </span>
+              ) : (
+                'Select to Book'
+              )}
             </button>
           </div>
         )}
 
         {!activity.isPartner && (
           <div className="pt-2 border-t border-white/10">
-            <a
-              href="#"
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
               className="block w-full text-center text-marriott-coral hover:text-marriott-lightRed font-medium py-2 transition-colors"
             >
-              View Details →
-            </a>
+              {isExpanded ? "Hide Details ↑" : "View Details →"}
+            </button>
+            
+            {isExpanded && (
+              <div className="mt-3 space-y-2 animate-fade-in-up">
+                {/* Highlights & Amenities - Two Column Grid */}
+                <div className="grid grid-cols-2 gap-2">
+                  {/* Highlights */}
+                  {activity.activity.highlights && activity.activity.highlights.length > 0 && (
+                    <div className="bg-white/5 rounded-lg p-2">
+                      <h5 className="text-white font-semibold text-sm mb-1.5">Highlights</h5>
+                      <ul className="space-y-1">
+                        {activity.activity.highlights.slice(0, 4).map((highlight, idx) => (
+                          <li key={idx} className="text-white/80 text-xs flex items-start gap-1.5">
+                            <span className="text-green-400 mt-0.5">✓</span>
+                            <span>{highlight}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Amenities */}
+                  {activity.activity.amenities && activity.activity.amenities.length > 0 && (
+                    <div className="bg-white/5 rounded-lg p-2">
+                      <h5 className="text-white font-semibold text-sm mb-1.5">Amenities</h5>
+                      <div className="flex flex-wrap gap-1">
+                        {activity.activity.amenities.slice(0, 6).map((amenity, idx) => (
+                          <span key={idx} className="text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-300 rounded border border-blue-500/30">
+                            {amenity}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Contact & Location - Two Column Grid */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-white/5 rounded-lg p-2 space-y-2 text-xs">
+                    <div>
+                      <div className="text-white/60 mb-0.5">📍 Meeting Point</div>
+                      <div className="text-white/90">{activity.activity.meetingPoint}</div>
+                    </div>
+                    <div>
+                      <div className="text-white/60 mb-0.5">📞 Contact</div>
+                      <div className="text-white/90">{activity.activity.contact}</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white/5 rounded-lg p-2 space-y-2 text-xs">
+                    <div>
+                      <div className="text-white/60 mb-0.5">⏱️ Duration</div>
+                      <div className="text-white/90">{activity.activity.duration}</div>
+                    </div>
+                    <div>
+                      <div className="text-white/60 mb-0.5">🚶 Distance</div>
+                      <div className="text-white/90">{activity.activity.distance}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

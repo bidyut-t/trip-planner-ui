@@ -52,26 +52,20 @@ export default function Background({ hideTitleText = false }: BackgroundProps) {
         }
       `}</style>
 
-      <div className="fixed inset-0 z-0">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
+      <div className="fixed inset-0 z-0 overflow-hidden">
+        <img 
+          src="/jw-marriott-4k.png" 
+          alt="Marriott Background"
+          className="absolute inset-0 w-full h-full object-cover"
           style={{
-            backgroundImage:
-              "url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=1080&fit=crop')",
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center',
           }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-red-900/30 via-rose-700/25 to-orange-600/20 z-10" />
-        </div>
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-black/35 via-orange-900/20 to-blue-900/25 z-10" />
       </div>
-
-      {!hideTitleText && (
-        <div
-          className="fixed top-[15%] left-1/2 -translate-x-1/2 text-[clamp(3rem,12vw,10rem)] font-black text-white/[0.08] text-center tracking-wider z-[1] pointer-events-none select-none uppercase whitespace-nowrap"
-          style={{ fontWeight: 900 }}
-        >
-          MARRIOTT BONVOY
-        </div>
-      )}
 
       <div ref={particlesRef} />
     </>
