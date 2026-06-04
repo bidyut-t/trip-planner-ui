@@ -176,5 +176,29 @@ export function generateTripPlan(userPrompt: string): TripPlan {
     endDate,
     travelers,
     days,
+    summary: {
+      estimatedBudget: {
+        min: 450,
+        max: 650,
+        currency: "$",
+      },
+      weatherInfo: "Expect warm summer weather with temperatures around 75-85°F. Pack light, breathable clothing and sunscreen.",
+      packingTips: [
+        "Comfortable walking shoes (expect 8-10 miles of walking per day)",
+        "Light jacket or sweater for air-conditioned museums",
+        "Sunscreen and sunglasses",
+        "Portable phone charger",
+        "Reusable water bottle",
+        "Camera for iconic photo opportunities",
+      ],
+      travelTips: [
+        "Purchase a MetroCard for unlimited subway rides ($33 for 7 days)",
+        "Make restaurant reservations at least 2 weeks in advance for popular spots",
+        "Download the Citymapper app for easy navigation",
+        "Consider getting a CityPASS to save on attraction entries",
+        "Museums are often less crowded on weekday mornings",
+        "Tipping standard is 15-20% at restaurants",
+      ],
+    },
   };
 }

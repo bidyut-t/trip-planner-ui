@@ -128,6 +128,92 @@ export default function MessageBubble({ message, selectedActivities, onSelectAct
               activities={message.tripPlan.days.flatMap(day => day.activities)}
             />
           </div>
+
+          {/* Trip Summary & Tips */}
+          {message.tripPlan.summary && (
+            <div 
+              className="glass-dark rounded-2xl p-4 animate-fade-in-up"
+              style={{ animationDelay: `${0.4 + message.tripPlan.days.length * 0.1}s` }}
+            >
+              <h4 className="text-white font-semibold text-lg mb-4 flex items-center gap-2">
+                <span>💼</span>
+                <span>Trip Summary & Tips</span>
+              </h4>
+
+              <div className="grid grid-cols-2 gap-3">
+                {/* Estimated Budget - Top Left */}
+                {message.tripPlan.summary.estimatedBudget && (
+                  <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xl">💰</span>
+                      <h5 className="text-white font-semibold text-sm">Estimated Budget</h5>
+                    </div>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-marriott-coral text-xl font-bold">
+                        {message.tripPlan.summary.estimatedBudget.currency}{message.tripPlan.summary.estimatedBudget.min}
+                      </span>
+                      <span className="text-white/60 text-sm">-</span>
+                      <span className="text-marriott-coral text-xl font-bold">
+                        {message.tripPlan.summary.estimatedBudget.currency}{message.tripPlan.summary.estimatedBudget.max}
+                      </span>
+                    </div>
+                    <p className="text-white/60 text-xs mt-1">
+                      Per person estimate
+                    </p>
+                  </div>
+                )}
+
+                {/* Weather Info - Top Right */}
+                {message.tripPlan.summary.weatherInfo && (
+                  <div className="bg-blue-500/10 rounded-lg p-3 border border-blue-500/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">🌤️</span>
+                      <h5 className="text-blue-300 font-semibold text-sm">Weather</h5>
+                    </div>
+                    <p className="text-white/80 text-xs leading-relaxed">
+                      {message.tripPlan.summary.weatherInfo}
+                    </p>
+                  </div>
+                )}
+
+                {/* Travel Tips - Bottom Left */}
+                {message.tripPlan.summary.travelTips && message.tripPlan.summary.travelTips.length > 0 && (
+                  <div className="bg-amber-500/10 rounded-lg p-3 border border-amber-500/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">💡</span>
+                      <h5 className="text-amber-300 font-semibold text-sm">Travel Tips</h5>
+                    </div>
+                    <ul className="space-y-1">
+                      {message.tripPlan.summary.travelTips.slice(0, 4).map((tip, idx) => (
+                        <li key={idx} className="text-white/80 text-xs flex items-start gap-1.5">
+                          <span className="text-amber-400 mt-0.5 text-xs">→</span>
+                          <span>{tip}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Packing Tips - Bottom Right */}
+                {message.tripPlan.summary.packingTips && message.tripPlan.summary.packingTips.length > 0 && (
+                  <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">🧳</span>
+                      <h5 className="text-white font-semibold text-sm">Don't Forget to Pack</h5>
+                    </div>
+                    <ul className="space-y-1">
+                      {message.tripPlan.summary.packingTips.slice(0, 4).map((tip, idx) => (
+                        <li key={idx} className="text-white/80 text-xs flex items-start gap-1.5">
+                          <span className="text-green-400 mt-0.5 text-xs">✓</span>
+                          <span>{tip}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

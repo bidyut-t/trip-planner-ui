@@ -52,7 +52,7 @@ export default function ItineraryCard({ activity, isModified = false, onSelect, 
         setTimeout(() => {
           setShowFlyingBag(false);
           setIsAnimating(false);
-        }, 1800);
+        }, 4500);
       }
       onSelect(activity.activity.id, !isSelected);
     }
@@ -197,11 +197,11 @@ export default function ItineraryCard({ activity, isModified = false, onSelect, 
             >
               {isSelected ? (
                 <span className="flex items-center justify-center gap-2">
-                  <span>Added for Booking</span>
+                  <span>Added to Cart</span>
                   <span>🛍️</span>
                 </span>
               ) : (
-                'Select to Book'
+                'Select'
               )}
             </button>
           </div>

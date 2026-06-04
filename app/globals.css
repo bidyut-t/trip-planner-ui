@@ -275,15 +275,17 @@ body {
     opacity: 1;
   }
   100% {
-    top: -80vh;
-    left: calc(100% + 20vw);
-    transform: translate(-50%, -50%) scale(0.3);
+    top: -100vh;
+    left: calc(100vw - 100px);
+    transform: translate(-50%, -50%) scale(0.2);
     opacity: 0;
   }
 }
 
 .animate-fly-to-cart {
-  animation: flyToCart 1.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  animation: flyToCart 4.5s cubic-bezier(0.18, 0.68, 0.36, 1) forwards;
+  position: fixed;
+  z-index: 9999;
 }
 
 /* Glassmorphism */

@@ -158,7 +158,7 @@ export default function ItineraryMap({ activities, excludedActivities = [] }: Pr
       lat: 40.6892,
       lng: -74.0445,
       included: false,
-      reason: 'Too far from route (12km from nearest stop)',
+      reason: 'Too far from route (7.5 miles from nearest stop)',
     },
     {
       id: 'nyc-bronx-zoo',
@@ -166,7 +166,7 @@ export default function ItineraryMap({ activities, excludedActivities = [] }: Pr
       lat: 40.8506,
       lng: -73.8769,
       included: false,
-      reason: 'Outside NEARBY_CATALOG_RADIUS_KM (15km threshold)',
+      reason: 'Outside radius threshold (9.3 miles)',
     },
     {
       id: 'nyc-times-square-diner',

@@ -58,6 +58,16 @@ export interface TripPlan {
     children: number;
   };
   days: DayPlan[];
+  summary?: {
+    estimatedBudget?: {
+      min: number;
+      max: number;
+      currency: string;
+    };
+    packingTips?: string[];
+    travelTips?: string[];
+    weatherInfo?: string;
+  };
 }
 
 export interface Message {
