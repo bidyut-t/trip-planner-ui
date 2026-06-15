@@ -1,4 +1,4 @@
-import { TripPlan, DayPlan, ItineraryActivity, Activity } from "@/types";
+import { TripPlan, DayPlan, ItineraryActivity, Activity, UserProfile, HotelRecommendation } from "@/types";
 import { parseUserPrompt, mockUserProfile } from "./userProfile";
 import nycActivitiesData from "@/data/marriott-nyc-activities-mock.json";
 
@@ -20,7 +20,63 @@ const isPartnerActivity = (activity: Activity): boolean => {
   return activity.provider === "Marriott Bonvoy Tours & Activities";
 };
 
-export function generateTripPlan(userPrompt: string): TripPlan {
+/**
+ * Check if user has an existing hotel booking for the given dates and destination
+ */
+function findExistingBooking(
+  userProfile: UserProfile | null,
+  destination: string,
+  startDate: string,
+  endDate: string
+): HotelRecommendation | null {
+  if (!userProfile?.hotelBookings || userProfile.hotelBookings.length === 0) {
+    return null;
+  }
+
+  // Normalize destination for matching (remove "City", case insensitive)
+  const normalizeDestination = (dest: string) => 
+    dest.toLowerCase().replace(/\s+city$/i, '').trim();
+
+  const normalizedTripDest = normalizeDestination(destination);
+
+  // Find booking that matches destination and overlaps with trip dates
+  const booking = userProfile.hotelBookings.find(b => {
+    const normalizedBookingDest = normalizeDestination(b.destination);
+    const matches = normalizedTripDest.includes(normalizedBookingDest) || 
+                   normalizedBookingDest.includes(normalizedTripDest);
+    return matches;
+  });
+
+  if (!booking) {
+    return null;
+  }
+
+  // Return the booked hotel as a HotelRecommendation
+  return {
+    id: booking.hotelId,
+    name: booking.hotelName,
+    address: "160 Central Park South, New York, NY 10019",
+    description: "Luxury property perfectly positioned across from Central Park with easy access to museums, fine dining, and world-class amenities.",
+    tags: ["Luxury", "Central Park Views", "Spa", "Fine Dining", "Concierge Service"],
+    isPartnerHotel: true,
+    matchedUserPreferences: [
+      `Booked dates: ${booking.checkInDate} - ${booking.checkOutDate}`,
+      `Room type: ${booking.roomType}`,
+      `Confirmation: ${booking.confirmationNumber}`,
+    ],
+    rating: 4.8,
+    reviewCount: 2340,
+    pricePerNight: 450,
+    currency: "$",
+    bonvoyPoints: 60000,
+    distanceFromActivities: "0.4 mi avg from your planned activities",
+    images: ["https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400"],
+    amenities: ["Spa", "Restaurant", "Fitness Center", "Concierge"],
+    bookingUrl: "https://www.marriott.com/reservation/confirmation",
+  };
+}
+
+export function generateTripPlan(userPrompt: string, userProfile?: UserProfile | null): TripPlan {
   // Parse the user prompt
   const parsedPrompt = parseUserPrompt(userPrompt);
   
@@ -169,6 +225,9 @@ export function generateTripPlan(userPrompt: string): TripPlan {
     },
   ];
 
+  // Check if user has existing booking
+  const existingBooking = findExistingBooking(userProfile || null, destination, startDate, endDate);
+
   return {
     destination,
     description,
@@ -176,6 +235,78 @@ export function generateTripPlan(userPrompt: string): TripPlan {
     endDate,
     travelers,
     days,
+    accommodation: existingBooking ? {
+      bookedHotel: existingBooking,
+    } : {
+      suggestions: [
+        {
+          id: "jw-marriott-essex-house",
+          name: "JW Marriott Essex House New York",
+          address: "160 Central Park South, New York, NY 10019",
+          description: "Luxury property perfectly positioned across from Central Park with easy access to your planned museums and fine dining experiences.",
+          tags: ["Luxury", "Central Park Views", "Fine Dining", "Concierge Service"],
+          isPartnerHotel: true,
+          matchedUserPreferences: [
+            "Luxury tier - matches your budget preference",
+            "Central to all planned activities (avg 0.4 mi)",
+            "Fine dining options for food enthusiasts",
+          ],
+          rating: 4.8,
+          reviewCount: 2340,
+          pricePerNight: 450,
+          currency: "$",
+          bonvoyPoints: 60000,
+          distanceFromActivities: "0.4 mi avg from your planned activities",
+          images: ["https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400"],
+          amenities: ["Spa", "Restaurant", "Fitness Center", "Concierge", "Room Service"],
+          bookingUrl: "https://www.marriott.com/",
+        },
+        {
+          id: "marriott-marquis-times-square",
+          name: "New York Marriott Marquis",
+          address: "1535 Broadway, New York, NY 10036",
+          description: "Iconic Times Square location with spectacular city views, perfect for families and groups seeking central Manhattan access.",
+          tags: ["Times Square", "Family-Friendly", "City Views", "Theater District"],
+          isPartnerHotel: true,
+          matchedUserPreferences: [
+            "Family-friendly amenities",
+            "Walking distance to Broadway theaters",
+            "Central location for all NYC attractions",
+          ],
+          rating: 4.6,
+          reviewCount: 5890,
+          pricePerNight: 380,
+          currency: "$",
+          bonvoyPoints: 50000,
+          distanceFromActivities: "0.6 mi avg from your planned activities",
+          images: ["https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400"],
+          amenities: ["Restaurant", "Lounge", "Fitness Center", "Business Center"],
+          bookingUrl: "https://www.marriott.com/",
+        },
+        {
+          id: "courtyard-manhattan-fifth-avenue",
+          name: "Courtyard New York Manhattan/Fifth Avenue",
+          address: "3 E 40th St, New York, NY 10016",
+          description: "Modern boutique hotel near Bryant Park offering excellent value with upscale amenities and walkability to your itinerary stops.",
+          tags: ["Boutique Style", "Great Value", "Bryant Park", "Modern"],
+          isPartnerHotel: true,
+          matchedUserPreferences: [
+            "Excellent value for premium location",
+            "Modern amenities and design",
+            "Close to museums and dining",
+          ],
+          rating: 4.5,
+          reviewCount: 1820,
+          pricePerNight: 320,
+          currency: "$",
+          bonvoyPoints: 40000,
+          distanceFromActivities: "0.5 mi avg from your planned activities",
+          images: ["https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=400"],
+          amenities: ["Fitness Center", "Restaurant", "Free WiFi", "Business Center"],
+          bookingUrl: "https://www.marriott.com/",
+        },
+      ],
+    },
     summary: {
       estimatedBudget: {
         min: 450,

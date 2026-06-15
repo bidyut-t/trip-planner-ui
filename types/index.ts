@@ -32,6 +32,27 @@ export interface Activity {
   longitude?: number; // Coordinates for map
 }
 
+export interface HotelRecommendation {
+  id: string;
+  name: string;
+  address: string;
+  description: string;
+  tags: string[];
+  isPartnerHotel: boolean;
+  matchedUserPreferences: string[];
+  rating: number;
+  reviewCount: number;
+  pricePerNight: number;
+  currency: string;
+  bonvoyPoints?: number;
+  distanceFromActivities: string;
+  images: string[];
+  amenities: string[];
+  latitude?: number;
+  longitude?: number;
+  bookingUrl?: string;
+}
+
 export interface ItineraryActivity {
   timeBlock: string;
   startTime: string;
@@ -58,6 +79,10 @@ export interface TripPlan {
     children: number;
   };
   days: DayPlan[];
+  accommodation?: {
+    bookedHotel?: HotelRecommendation;
+    suggestions?: HotelRecommendation[];
+  };
   summary?: {
     estimatedBudget?: {
       min: number;
@@ -113,4 +138,13 @@ export interface UserProfile {
     preferLocalExperiences: boolean;
     fitnessLevel: "low" | "moderate" | "high";
   };
+  hotelBookings?: {
+    hotelId: string;
+    hotelName: string;
+    destination: string;
+    checkInDate: string;
+    checkOutDate: string;
+    confirmationNumber: string;
+    roomType: string;
+  }[];
 }

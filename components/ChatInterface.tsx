@@ -148,12 +148,6 @@ export default function ChatInterface({ onChatStart }: ChatInterfaceProps) {
       // AI-POWERED CONVERSATIONAL MEMORY: Let the AI decide everything!
       // No brittle keyword detection - AI understands intent naturally
       
-      console.log('[ChatInterface] Sending to AI:', {
-        userInput,
-        hasExistingPlan: !!tripContext.currentPlan,
-        currentDestination: tripContext.currentPlan?.destination,
-      });
-      
       // ALWAYS pass current plan if it exists - let AI decide what to do with it
       // AI will determine: "Is this modifying existing plan or requesting a new trip?"
       let tripPlan;
@@ -168,16 +162,18 @@ export default function ChatInterface({ onChatStart }: ChatInterfaceProps) {
           selectedUserId,
           tripContext.currentPlan  // Always pass current plan if exists
         );
-        
-        // DEBUG: Log what we received
-        console.log('[ChatInterface] Received plan from backend:', {
-          destination: tripPlan.destination,
-          dayCount: tripPlan.days.length,
-          activityCount: tripPlan.days[0]?.activities?.length || 0,
-          activities: tripPlan.days[0]?.activities?.map(a => a.activity.name) || []
-        });
       } else {
-        tripPlan = generateTripPlan(userInput);
+        // Mock mode: Get user profile and pass to trip planner
+        let userProfile = null;
+        if (selectedUserId) {
+          try {
+            const profiles = await apiService.getUserProfiles();
+            userProfile = profiles.find(p => p.id === selectedUserId) || null;
+          } catch (error) {
+            console.error('Failed to load profile for trip planning:', error);
+          }
+        }
+        tripPlan = generateTripPlan(userInput, userProfile);
       }
 
       // Calculate remaining delay to reach minimum response time

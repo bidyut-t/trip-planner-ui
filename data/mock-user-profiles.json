@@ -1,0 +1,85 @@
+{
+  "profiles": [
+    {
+      "id": "user-001",
+      "name": "Maverick",
+      "bonvoyMemberNumber": "MB87654321",
+      "dietaryRestrictions": ["high-protein", "low-carb"],
+      "accessibilityNeeds": [],
+      "budgetLevel": "luxury",
+      "travelStyle": "adventure",
+      "preferences": {
+        "avoidCrowds": false,
+        "preferLocalExperiences": true,
+        "fitnessLevel": "high"
+      },
+      "hotelBookings": [
+        {
+          "hotelId": "jw-marriott-essex-house",
+          "hotelName": "JW Marriott Essex House New York",
+          "destination": "New York",
+          "checkInDate": "July 1, 2026",
+          "checkOutDate": "July 4, 2026",
+          "confirmationNumber": "MB-NYC-789456",
+          "roomType": "Deluxe King Suite"
+        }
+      ]
+    },
+    {
+      "id": "user-002",
+      "name": "Sarah",
+      "bonvoyMemberNumber": "MB12345678",
+      "dietaryRestrictions": ["vegan"],
+      "accessibilityNeeds": [],
+      "budgetLevel": "moderate",
+      "travelStyle": "cultural",
+      "preferences": {
+        "avoidCrowds": true,
+        "preferLocalExperiences": true,
+        "fitnessLevel": "moderate"
+      }
+    },
+    {
+      "id": "user-003",
+      "name": "James",
+      "bonvoyMemberNumber": "MB23456789",
+      "dietaryRestrictions": [],
+      "accessibilityNeeds": ["wheelchair"],
+      "budgetLevel": "luxury",
+      "travelStyle": "relaxation",
+      "preferences": {
+        "avoidCrowds": true,
+        "preferLocalExperiences": false,
+        "fitnessLevel": "low"
+      }
+    },
+    {
+      "id": "user-004",
+      "name": "Emily",
+      "bonvoyMemberNumber": "MB34567890",
+      "dietaryRestrictions": ["gluten-free"],
+      "accessibilityNeeds": [],
+      "budgetLevel": "budget",
+      "travelStyle": "foodie",
+      "preferences": {
+        "avoidCrowds": false,
+        "preferLocalExperiences": true,
+        "fitnessLevel": "moderate"
+      }
+    },
+    {
+      "id": "user-005",
+      "name": "Taylor",
+      "bonvoyMemberNumber": "MB45678901",
+      "dietaryRestrictions": [],
+      "accessibilityNeeds": [],
+      "budgetLevel": "moderate",
+      "travelStyle": "mixed",
+      "preferences": {
+        "avoidCrowds": false,
+        "preferLocalExperiences": true,
+        "fitnessLevel": "moderate"
+      }
+    }
+  ]
+}
