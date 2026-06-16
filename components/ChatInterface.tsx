@@ -152,10 +152,6 @@ export default function ChatInterface({ onChatStart }: ChatInterfaceProps) {
       // AI will determine: "Is this modifying existing plan or requesting a new trip?"
       let tripPlan;
       
-      // Add minimum delay for mock data to simulate realistic response time
-      const startTime = Date.now();
-      const minDelay = 15000; // 15 seconds average response time
-      
       if (config.useApiData) {
         tripPlan = await apiService.generateItinerary(
           userInput, 
@@ -176,12 +172,7 @@ export default function ChatInterface({ onChatStart }: ChatInterfaceProps) {
         tripPlan = generateTripPlan(userInput, userProfile);
       }
 
-      // Calculate remaining delay to reach minimum response time
-      const elapsed = Date.now() - startTime;
-      const remainingDelay = Math.max(0, minDelay - elapsed);
-      
-      setTimeout(() => {
-        const assistantMessage: Message = {
+      const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: "assistant",
           content: tripContext.currentPlan 
@@ -218,7 +209,6 @@ export default function ChatInterface({ onChatStart }: ChatInterfaceProps) {
           };
           setMessages((prev) => [...prev, followUpMessage]);
         }, 800);
-      }, remainingDelay);
     } catch (error) {
       console.error('Error processing request:', error);
       setIsLoading(false);
