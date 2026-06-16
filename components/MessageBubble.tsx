@@ -2,6 +2,7 @@
 
 import { Message } from "@/types";
 import ItineraryCard from "./ItineraryCard";
+import HotelCard from "./HotelCard";
 import dynamic from 'next/dynamic';
 
 // Dynamically import map to avoid SSR issues
@@ -62,6 +63,61 @@ export default function MessageBubble({ message, selectedActivities, onSelectAct
                   }`}
               </span>
             </div>
+          </div>
+
+          {/* Hotel Recommendations - Right after trip summary */}
+          {message.tripPlan.accommodation && (
+            <div className="space-y-3">
+              {message.tripPlan.accommodation.bookedHotel ? (
+                // User has a booked hotel
+                <div className="animate-fade-in-up" style={{ animationDelay: '0.08s' }}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <h4 className="text-white font-semibold text-lg flex items-center gap-2">
+                      <span>🏨</span>
+                      <span>Your Accommodation</span>
+                    </h4>
+                  </div>
+                  <HotelCard hotel={message.tripPlan.accommodation.bookedHotel} isBooked={true} />
+                </div>
+              ) : message.tripPlan.accommodation.suggestions && message.tripPlan.accommodation.suggestions.length > 0 ? (
+                // Show hotel suggestions
+                <div className="animate-fade-in-up" style={{ animationDelay: '0.08s' }}>
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <h4 className="text-white font-semibold text-lg flex items-center gap-2">
+                      <span>🏨</span>
+                      <span>Recommended Hotels for Your Trip</span>
+                    </h4>
+                    <div className="text-white/60 text-xs flex items-center gap-1">
+                      <span>←</span>
+                      <span>Scroll</span>
+                      <span>→</span>
+                    </div>
+                  </div>
+                  {/* Horizontal scrollable carousel */}
+                  <div className="overflow-x-auto pb-2 -mx-2 px-2 snap-x snap-mandatory scroll-smooth">
+                    <div className="flex gap-3">
+                      {message.tripPlan.accommodation.suggestions.map((hotel, idx) => (
+                        <div 
+                          key={hotel.id}
+                          className="animate-fade-in-up snap-start"
+                          style={{ animationDelay: `${0.1 + idx * 0.05}s` }}
+                        >
+                          <HotelCard hotel={hotel} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          )}
+
+          {/* Trip Plan Heading */}
+          <div className="animate-fade-in-up" style={{ animationDelay: '0.12s' }}>
+            <h4 className="text-white font-semibold text-lg flex items-center gap-2 mb-3">
+              <span>📅</span>
+              <span>Your Trip Plan</span>
+            </h4>
           </div>
 
           {/* Day by Day Itinerary with staggered animation */}

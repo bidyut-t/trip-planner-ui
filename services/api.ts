@@ -165,6 +165,10 @@ export class ApiService {
           })),
         };
       }),
+      // Handle accommodation field
+      accommodation: data.accommodation,
+      // Handle summary field
+      summary: data.summary,
     };
   }
 
@@ -192,6 +196,19 @@ export class ApiService {
    * @returns Array of user profiles with preferences (dietary, fitness, travel style, etc.)
    */
   async getUserProfiles(): Promise<UserProfile[]> {
+    // Use mock data if configured
+    if (config.useMockData) {
+      try {
+        const mockProfiles = await import('@/data/mock-user-profiles.json');
+        // Try both ways to access the data
+        const profilesData = mockProfiles.default?.profiles || mockProfiles.profiles;
+        return profilesData as UserProfile[];
+      } catch (error) {
+        console.error('[ApiService] Error loading mock profiles:', error);
+        throw error;
+      }
+    }
+
     const response = await fetch(`${this.baseUrl}/api/trips/profiles`, {
       method: 'GET',
     });
